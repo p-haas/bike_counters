@@ -13,8 +13,6 @@ from sklearn.cluster import KMeans
 from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.metrics import root_mean_squared_error
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from skrub import DatetimeEncoder
 
