@@ -37,6 +37,7 @@ weather = pd.read_csv(
 
 # Import public transport data
 # https://data.iledefrance-mobilites.fr/explore/dataset/histo-validations-reseau-ferre/information/
+
 # URLs of the zip files
 urls = [
     "https://data.iledefrance-mobilites.fr/explore/dataset/histo-validations-reseau-ferre/files/e6bcf4c994951fc086e31db6819a3448/download/",
@@ -68,8 +69,9 @@ for url in urls:
 underground_transport = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
 
-# # https://data.iledefrance-mobilites.fr/explore/dataset/histo-validations-reseau-surface/information/
-# # URLs of the zip files
+# https://data.iledefrance-mobilites.fr/explore/dataset/histo-validations-reseau-surface/information/
+
+# URLs of the zip files
 urls = [
     "https://data.iledefrance-mobilites.fr/explore/dataset/histo-validations-reseau-surface/files/41adcbd4216382c232ced4ccbf60187e/download/",
     "https://data.iledefrance-mobilites.fr/explore/dataset/histo-validations-reseau-surface/files/68cac32e8717f476905a60006a4dca26/download/",
@@ -107,6 +109,8 @@ overground_transport = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFram
 
 
 # Import car traffic data
+# https://opendata.paris.fr/explore/dataset/comptages-routiers-permanents-historique/information/
+
 # URLs of the zip files
 urls = [
     "https://parisdata.opendatasoft.com/api/datasets/1.0/comptages-routiers-permanents-historique/attachments/opendata_txt_2020_zip/",
@@ -141,9 +145,18 @@ cars_count = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
 # Import multi-modal transport data
 # https://parisdata.opendatasoft.com/explore/dataset/comptage-multimodal-comptages/information/?disjunctive.label&disjunctive.mode&disjunctive.voie&disjunctive.sens&disjunctive.trajectoire&sort=-t&basemap=jawg.dark&location=13,48.87023,2.34614
-multimodal_traffic = pd.read_parquet(
-    "/kaggle/input/multimodal_traafic-count.parquet"
-)
+
+# URL of the Parquet file
+url = "https://parisdata.opendatasoft.com/api/explore/v2.1/catalog/datasets/comptage-multimodal-comptages/exports/parquet?lang=fr&timezone=Europe%2FParis"
+
+# Send a GET request to download the file
+response = requests.get(url)
+
+# Check if the request was successful
+if response.status_code == 200:
+    # Load the content into a Pandas DataFrame
+    parquet_file = io.BytesIO(response.content)
+    multimodal_traffic = pd.read_parquet(parquet_file)
 
 
 # Define functions to process and merge the data
