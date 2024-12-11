@@ -8,6 +8,7 @@ import zipfile
 # Third-Party Imports
 import numpy as np
 import pandas as pd
+import PyGRF
 import requests
 from scipy.stats import mode
 from sklearn.cluster import KMeans
@@ -797,15 +798,26 @@ X_test_enc_df = pd.DataFrame(X_test_enc, columns=all_feature_names)
 X_train_enc_df = X_train_enc_df.apply(pd.to_numeric, errors="coerce")
 X_test_enc_df = X_test_enc_df.apply(pd.to_numeric, errors="coerce")
 
-model = ExtraTreesRegressor()
-
-model.fit(
-    X_train_enc_df,
-    y_train,
+coords = ["latitude", "longitude"]
+bandwidth, local_weight, p_value = PyGRF.search_bw_lw_ISA(
+    y_train, X_train_enc_df[coords]
 )
 
-y_pred = model.predict(X_test_enc_df)
+pygrf = PyGRF.PyGRFBuilder(
+    band_width=bandwidth,
+    train_weighted=True,
+    predict_weighted=True,
+    bootstrap=False,
+    resampled=True,
+    random_state=42,
+)
 
-pd.DataFrame(y_pred, columns=["log_bike_count"]).reset_index().rename(
+pygrf.fit(X_train_enc_df.drop(columns=coords), y_train, X_train_enc_df[coords])
+
+predict_combined, predict_global, predict_local = pygrf.predict(
+    X_test_enc_df.drop(columns=coords), X_test_enc_df[coords], local_weight=local_weight
+)
+
+pd.DataFrame(predict_combined, columns=["log_bike_count"]).reset_index().rename(
     columns={"index": "Id"}
 ).to_csv("submission.csv", index=False)
