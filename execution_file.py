@@ -737,6 +737,15 @@ X_train = df_train.drop(
     ],
 )
 
+X_test = X_test.drop(
+    columns=[
+        "date",
+        "counter_name",
+        "site_name",
+        "counter_installation_date",
+    ],
+)
+
 cols = [
     "2 roues motorisées",
     "Autobus et autocars",
@@ -752,33 +761,6 @@ cols = [
 
 X_train[cols] = X_train[cols].fillna(0)
 
-cols_to_scale = [
-    "total_seconds",
-    "weather_1",
-    "weather_2",
-    "weather_3",
-    "weather_4",
-    "weather_5",
-    "weather_6",
-    "weather_7",
-    "weather_8",
-    "weather_9",
-    "weather_10",
-    "NB_VALD",
-    "q",
-    "daily_cumsum",
-    "2 roues motorisées",
-    "Autobus et autocars",
-    "Trottinettes",
-    "Véhicules lourds > 3,5t",
-    "Véhicules légers < 3,5t",
-    "2 roues motorisées_cumsum",
-    "Autobus et autocars_cumsum",
-    "Trottinettes_cumsum",
-    "Véhicules lourds > 3,5t_cumsum",
-    "Véhicules légers < 3,5t_cumsum",
-]
-
 cols_to_label_encode = [
     "counter_id",
     "site_id",
@@ -789,7 +771,6 @@ cols_to_label_encode = [
 # Define the preprocessor
 preprocessor = ColumnTransformer(
     [
-        ("scaler", StandardScaler(), cols_to_scale),
         ("label_encoder", OrdinalEncoder(), cols_to_label_encode),
     ],
     remainder="passthrough",
@@ -801,16 +782,13 @@ X_train_enc = preprocessor.transform(X_train)
 X_test_enc = preprocessor.transform(X_test)
 
 # Get feature names from the transformers
-scaler_feature_names = [f"{col}_scaled" for col in cols_to_scale]
 label_encoder_feature_names = [f"{col}_encoded" for col in cols_to_label_encode]
 passthrough_feature_names = [
-    col for col in X_train.columns if col not in cols_to_scale + cols_to_label_encode
+    col for col in X_train.columns if col not in cols_to_label_encode
 ]
 
 # Combine all feature names
-all_feature_names = (
-    scaler_feature_names + label_encoder_feature_names + passthrough_feature_names
-)
+all_feature_names = label_encoder_feature_names + passthrough_feature_names
 
 # Convert the numpy ndarray to a pandas DataFrame
 X_train_enc_df = pd.DataFrame(X_train_enc, columns=all_feature_names)
@@ -823,11 +801,11 @@ X_test_enc_df = X_test_enc_df.apply(pd.to_numeric, errors="coerce")
 model = ExtraTreesRegressor()
 
 model.fit(
-    X_train_enc,
+    X_train_enc_df,
     y_train,
 )
 
-y_pred = model.predict(X_test_enc)
+y_pred = model.predict(X_test_enc_df)
 
 pd.DataFrame(y_pred, columns=["log_bike_count"]).reset_index().rename(
     columns={"index": "Id"}
